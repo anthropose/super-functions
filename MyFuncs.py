@@ -392,8 +392,7 @@ def describeCat(df, include = None):
                 print("Count of distinct observations without NaNs: ",
                       obj_df[name].nunique(dropna = True))
                 print("\n")
-                obj_df[name].value_counts(dropna = False).plot(kind = "bar", 
-                      title = name)
+                obj_df[name].value_counts(dropna = False).plot(kind = "bar")
                 plt.show()
                 print("\n")
                 print("\n")
@@ -413,8 +412,7 @@ def describeCat(df, include = None):
                 print("Count of distinct observations without NaNs: ",
                       obj_df[name].nunique(dropna = True))
                 print("\n")
-                obj_df[name].value_counts(dropna = False).plot(kind = "bar", 
-                      title = name)
+                obj_df[name].value_counts(dropna = False).plot(kind = "bar")
                 plt.show()
                 print("\n")
                 print("\n")

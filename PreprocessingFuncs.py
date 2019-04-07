@@ -9,22 +9,37 @@ Created on Fri Mar  8 14:34:11 2019
 # import libraries
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 from sklearn.pipeline import Pipeline
 from sklearn.impute import SimpleImputer
+from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import Normalizer
+from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.preprocessing import Binarizer
 from sklearn.preprocessing import OrdinalEncoder
+from sklearn.preprocessing import LabelEncoder
+from sklearn.decomposition import PCA
 
 
 #%%
 # function to drop unnecessary features
-def drop_preprocessing(df, drop_cols):
+def drop_preprocessing(df, drop_cols, axis = 1):
     for name in drop_cols:
-        df.drop(name, axis = 1, inplace = True)
+        df.drop(name, axis = axis, inplace = True)
         
     return df
 
 
+#%%
+# function to clip values at a user-defined threshold
+def clip_preprocessing(df, clip_cols, threshold = 0):
+    for name in clip_cols:
+        df[name] = df[name].clip(lower = threshold)
+    
+    return df
+    
+    
 #%%
 # function to convert all date-time features into date-time objects
 def datetime_preprocessing(df, date_time_cols):
@@ -99,8 +114,88 @@ def fill_missing_constant_preprocessor(df, missing_cols, fill_value = -9999):
     for col in missing_cols:
         df[col] = pd.DataFrame(si.fit_transform(df[[col]]), index = df.index)
         
-    return si
+    return si   
 
+
+#%%
+# function to min-max scale numeric features to be between 0 and 1
+def zero_one_scale(df, scale_cols):
+    scaled_cols = {}
+    for col in scale_cols:
+        scaler = MinMaxScaler(feature_range = (0,1))
+        df[col + "_scaled"] = pd.DataFrame(scaler.fit_transform(df[[col]]), index = df.index)
+        df.drop(col, axis = 1, inplace = True)
+        scaled_cols[col] = scaler
+    
+    return scaled_cols
+
+
+#%%
+# function to z-score transform numeric features
+def zscore(df, z_cols, with_mean = True, with_std = True):
+    standardized_cols = {}
+    for col in z_cols:
+        z_standardizer = StandardScaler(with_mean = with_mean, with_std = with_std)
+        df[col + "_z"] = pd.DataFrame(z_standardizer.fit_transform(df[[col]]), index = df.index)
+        df.drop(col, axis = 1, inplace = True)
+        standardized_cols[col] = z_standardizer
+    
+    return standardized_cols
+
+
+#%%
+# function to generate and plot cumulative sums of explained variance using PCA 
+# to determine the best number of components
+def pca_cumsum_plot(df, n_keep = "mle", solver = "full", seed = 42, name = "Plot"):
+    pca = PCA(n_components = n_keep, svd_solver = solver, random_state = seed)
+    pca.fit_transform(df)
+    df.name = name
+    
+    var = pca.explained_variance_ratio_
+    cum_var = np.cumsum(np.round(var, decimals = 4) * 100)
+    plt.plot(cum_var)
+    plt.title("PCs for %s" % name)
+    plt.xlabel("Number of Principal Components")
+    plt.ylabel("Cumulative Percent Variance Explained")
+    plt.show()    
+    
+
+#%%
+# function to normalize the rows of a dataframe; allows the user to remove
+# unnecessary columns prior to normalization and concat them back in
+#def normalize(df, norm_cols):
+#    normalized_cols = {}
+#    for col in norm_cols:
+#        norm = Normalizer(norm = "l2")
+#        df[col + "_norm"] = pd.DataFrame(norm.fit_transform(df[[col]]), index = df.index)
+#        df.drop(col, axis = 1, inplace = True)
+#        normalized_cols[col] = norm
+#    
+#    return normalized_cols
+#
+#norm = Normalizer(norm='l2')
+#dfnorm= pd.DataFrame(norm.fit_transform(data131_ASL[norm_cols]), 
+#                      columns=['norm_'+x for x in
+
+
+def normalize(df, norm_cols, norm_type = "l2"):
+    df_temp = df[norm_cols]
+    df.drop(norm_cols, axis = 1, inplace = True)
+    norm = Normalizer(norm = norm_type)
+    df_norm = pd.DataFrame(norm.fit_transform(df_temp[norm_cols]), 
+                           columns = [x + '_norm' for x in df_temp.columns], 
+                           index = df_temp.index)
+    new_df = pd.concat((df, df_norm), axis = 1, join = "outer")
+    
+    return new_df
+
+
+#%%
+# function to get dummy/indicator variables for specific categorical variables
+#def dummy(df, dummy_cols, prefix = None):
+#    for col in dummy_cols:
+#        pd.get_dummies()
+#test = pd.get_dummies(data = data131_y["ABC"], prefix = "ABC", sparse = False, dtype = int)
 
 #%%
 # function to convert numeric features to kbinsdiscretized features
@@ -151,6 +246,18 @@ def cat2ordinal_preprocessor(df, ordinal_cols):
         ordinal_encoders[col] = ordinal_encoder
     
     return ordinal_encoders
+
+
+#%%
+#def cat2label_preprocessor(df, label_cols):
+#    label_encoders = {}
+#    for col in label_cols:
+#        label_encoder = LabelEncoder()
+#        df[col + "_labeled"] = pd.DataFrame(label_encoder.fit_transform(df[[col]]), index = df.index)
+#        df.drop(col, axis = 1, inplace = True)
+#        label_encoders[col] = label_encoder
+#    
+#    return label_encoders
 
 
 #%%
