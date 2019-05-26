@@ -58,12 +58,13 @@ def gaussian_parameter_search(df, n_components, cov_type = "full"):
 
 #%%
 # function to plot AICs and BICs and find the lowest value to determine the best n
-def plot_gaussian_AIC_BIC(AIC, BIC):
+def plot_gaussian_AIC_BIC(AIC, BIC, title):
     plt.figure()
     plt.plot(list(AIC.keys()), list(AIC.values()), label = "AIC")
     plt.plot(list(BIC.keys()), list(BIC.values()), label = "BIC")
     plt.xlabel("Number of Components/Clusters")
     plt.ylabel("Information Criterion")
+    plt.title(title)
     plt.legend(loc = "best")
 
 

@@ -12,6 +12,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import missingno as msno
 
+
 #%%
 # my defaults
 # set color palette for Seaborn
@@ -27,6 +28,7 @@ print("Setting Seaborn display default to [paper]")
 max_col = 50
 print("Setting Pandas display.max_columns defaults to [%d]" % max_col)
 pd.set_option("display.max_columns", max_col)
+
 
 #%%
 # load data function
@@ -97,6 +99,7 @@ def QView(df):
         
     else:
         print("Not a Pandas dataframe")
+        
 
 #%%
 # remove NaNs function
@@ -119,6 +122,7 @@ def elimNan(df):
     
     # return newly-created dataframe without NaNs    
     return new_df
+
 
 #%%
 # remove outliers function
@@ -161,7 +165,6 @@ def percentMissing(df):
         
         # sort the percentages from highest to lowest
         sorted_missing = per_missing.sort_values(ascending = False)
-        print(sorted_missing)
         
         return sorted_missing
         
@@ -210,6 +213,7 @@ def visMissing(df, method):
             "Method type requires string (i.e., seaborn, missingno, pyplot)")
     else:
         print("Not a Pandas dataframe")
+        
 
 #%%
 # visualize correlation(s) of missing values using msno package
@@ -263,19 +267,30 @@ def Numplots(df, ptype):
             # step 1: pull all column names where the type is numeric
             cols = df.select_dtypes(include = "number").columns.values
             
-            # step 2: plot each numeric feature from the original dataframe
-            for name in cols:
-                df[name].plot(kind = ptype, title = name)
-                plt.xlabel(xlabel = "Bins")
-                plt.ylabel(ylabel = "Frequency")
-                plt.show()
+            # step 2: create figure and subplots based on the number of numeric
+            # features
+            num_cols = len(cols)
+            subplot_num_rows = int(np.ceil(len(cols) / 2))
+            subplot_num_cols = 2
+            plt.figure(figsize = (4*subplot_num_cols, 2*subplot_num_rows))
+            
+            for i in range(num_cols):
+                name = cols[i]
+                plt.subplot(subplot_num_rows, subplot_num_cols, i + 1)
                 
+                # step 3: plot each numeric feature from the original df
+                df[name].plot(kind = ptype, title = name)
+                    
+            plt.tight_layout()
+            plt.show()
+            
         else: 
             print("Plot type requires string, (i.e., hist, box, area")
     else:
         print("Not a Pandas dataframe")
 
 # add functionality for scatterplots??
+        
 
 #%%
 # display distributions and outliers for numeric features using Seaborn
@@ -287,28 +302,41 @@ def snsNumplots(df, ptype):
     """
         # display plot(s) only for numeric features
     if type(df) is pd.DataFrame:
-            # step 1: extract only numeric data from dataframe and ignore NaNs
-            num_df = elimNan(df.select_dtypes(include = "number"))
-            
-            # step 2: pull all column names from new numeric dataframe
-            col_names = num_df.columns.values
-            
-            # step 3: produce desired plots for each feature in numeric df
-            if type(ptype) is str:
-                if ptype == "box":                              
-                    for name in col_names:
-                        sns.boxplot(num_df[name], 
-                                    color = "green", 
-                                    orient = "v")
-                        plt.show()
+        # step 1: extract only numeric data from dataframe and ignore NaNs
+        new_df = elimNan(df.select_dtypes(include = "number"))
+        
+        # step 2: pull all column names from new numeric dataframe
+        cols = new_df.columns.values
+
+        if type(ptype) is str:
+            # step 3: create figure and subplots based on the number of numeric
+            # features
+            num_cols = len(cols)
+            subplot_num_rows = int(np.ceil(len(cols) / 2))
+            subplot_num_cols = 2
+            plt.figure(figsize = (4*subplot_num_cols, 2*subplot_num_rows))
+    
+            #  step 4: produce desired plots for each feature in numeric df
+            if ptype == "box":
+                for i in range(num_cols):
+                    name = cols[i]
+                    plt.subplot(subplot_num_rows, subplot_num_cols, i + 1)  
+                    sns.boxplot(new_df[name], 
+                                color = "green", 
+                                orient = "v")
+                plt.tight_layout()
+                plt.show()
                         
-                if ptype == "dist":
-                    for name in col_names:
-                        sns.distplot(num_df[name], 
-                                     kde = True)
-                        plt.show()
-            else: 
-                print("Plot type requires string, (i.e., box, dist)")
+            if ptype == "dist":
+                for i in range(num_cols):
+                    name = cols[i]
+                    plt.subplot(subplot_num_rows, subplot_num_cols, i + 1)  
+                    sns.distplot(new_df[name], 
+                                 kde = True)
+                plt.tight_layout()
+                plt.show()
+        else: 
+            print("Plot type requires string, (i.e., box, dist)")
     else:
         print("Not a Pandas dataframe")
         
@@ -328,12 +356,14 @@ def corrNum(df, ptype, annot = False):
         if type(ptype) is str:
             if annot == False:
                 if ptype == "heatmap":
+                    plt.figure(figsize = (10,10))
                     sns.heatmap(df.corr(),
                                 cmap = "Blues")
                     plt.title("Correlation Matrix")
                     plt.show()
                     
                 if ptype == "clustermap":
+                    plt.figure(figsize = (10,10))
                     sns.clustermap(df.corr(), 
                                    metric = "correlation", 
                                    cmap = "Blues")
@@ -343,6 +373,7 @@ def corrNum(df, ptype, annot = False):
             else:
                 if annot == True:
                     if ptype == "heatmap":
+                        plt.figure(figsize = (10,10))
                         sns.heatmap(df.corr(),
                                     cmap = "Blues",
                                     annot = True)
@@ -350,6 +381,7 @@ def corrNum(df, ptype, annot = False):
                         plt.show()
                         
                     if ptype == "clustermap":
+                        plt.figure(figsize = (10,10))
                         sns.clustermap(df.corr(), 
                                        metric = "correlation", 
                                        cmap = "Blues",
@@ -364,63 +396,69 @@ def corrNum(df, ptype, annot = False):
      
 #%%
 # describe object features          
-def describeCat(df, include = None):
+def describeCat(df, include=None, dropNaN=False):
     """
     Describe string/object features in a dataframe. Takes two arguments: 1) the
-    name of the Pandas dataframe, and 2) an optional argument that passes in a
+    name of the Pandas dataframe, 2) an optional argument that passes in a
     list of desired features for which value counts and counts of distinct
     observations are generated. Returns counts and percentages of unique values
-    for each categorical feature and counts of their distinct observations.
+    for each categorical feature and counts of their distinct observations, and
+    3) a Boolean argument for whether value_counts should include NaNs or not
     """
     if type(df) is pd.DataFrame:
         # extract string features into new dataframe
-        obj_df = df.select_dtypes(include = "object")
-        
+        obj_df = df.select_dtypes(include="object")
+
         if include is None:
             # extract string feature names to new object
             obj_cols = obj_df.columns.values
-            
+
             # distinct values for all string features
-            for name in obj_cols:                
-                counts = obj_df[name].value_counts(dropna = False)
-                percents = counts / len(obj_df)
+            for name in obj_cols:
+                print(str.upper(name))
+                counts = obj_df[name].value_counts(dropna=dropNaN)
+                percents = round(counts / len(obj_df), 2)
                 new_df = pd.DataFrame({"counts": counts,
                                        "percent of total": percents})
                 print(new_df)
                 print("Count of distinct observations including NaNs: ",
-                      obj_df[name].nunique(dropna = False))
+                      obj_df[name].nunique(dropna=False))
                 print("Count of distinct observations without NaNs: ",
-                      obj_df[name].nunique(dropna = True))
+                      obj_df[name].nunique(dropna=True))
                 print("\n")
-                obj_df[name].value_counts(dropna = False).plot(kind = "bar")
+                obj_df[name].value_counts(dropna=dropNaN).plot(kind="bar")
+                plt.title(name)
                 plt.show()
                 print("\n")
                 print("\n")
-                
+
             return new_df
-            
+
         else:
             obj_cols = obj_df[include].columns.values
             for name in obj_cols:
-                counts = obj_df[name].value_counts(dropna = False)
-                percents = counts / len(obj_df)
+                print(str.upper(name))
+                counts = obj_df[name].value_counts(dropna=dropNaN)
+                percents = round(counts / len(obj_df), 2)
                 new_df = pd.DataFrame({"counts": counts,
                                        "percent of total": percents})
                 print(new_df)
                 print("Count of distinct observations including NaNs: ",
-                      obj_df[name].nunique(dropna = False))
+                      obj_df[name].nunique(dropna=False))
                 print("Count of distinct observations without NaNs: ",
-                      obj_df[name].nunique(dropna = True))
+                      obj_df[name].nunique(dropna=True))
                 print("\n")
-                obj_df[name].value_counts(dropna = False).plot(kind = "bar")
+                obj_df[name].value_counts(dropna=dropNaN).plot(kind="bar")
+                plt.title(name)
                 plt.show()
                 print("\n")
                 print("\n")
-            
+
             return new_df
 
     else:
         print("Not a Pandas dataframe")
+        
                  
 #%%
 # visualize categorical features using scatter, distribution, bar, and count 
@@ -442,13 +480,12 @@ def Catplots(df, ptype, include = None):
             
             # generate plots for every string feature by each numerical feature
             if include is None:
-                
                 # Seaborn scatterplot
                 if ptype == "strip":
                     for name1 in obj_cols:
                         for name2 in num_cols:
                             sns.catplot(x = name2,
-                                        y=name1, 
+                                        y = name1, 
                                         data = df)
                             plt.show()
                             
@@ -457,7 +494,7 @@ def Catplots(df, ptype, include = None):
                     for name1 in obj_cols:
                         for name2 in num_cols:
                             sns.catplot(x = name2, 
-                                        y=name1, 
+                                        y = name1, 
                                         kind = "box", 
                                         data = df)
                             plt.show()
@@ -467,7 +504,7 @@ def Catplots(df, ptype, include = None):
                     for name1 in obj_cols:
                         for name2 in num_cols:
                             sns.catplot(x = name2, 
-                                        y=name1, 
+                                        y = name1, 
                                         kind = "violin", 
                                         data = df)
                             plt.show()
@@ -531,18 +568,3 @@ def Catplots(df, ptype, include = None):
             print("ptype requires string")
     else:
         print("Not a Pandas dataframe")        
-
-   
-    
-   
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        
-        

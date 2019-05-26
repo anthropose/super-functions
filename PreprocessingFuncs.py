@@ -18,7 +18,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import KBinsDiscretizer
 from sklearn.preprocessing import Binarizer
 from sklearn.preprocessing import OrdinalEncoder
-from sklearn.preprocessing import LabelEncoder
+#from sklearn.preprocessing import LabelEncoder
 from sklearn.decomposition import PCA
 
 
@@ -157,7 +157,7 @@ def pca_cumsum_plot(df, n_keep = "mle", solver = "full", seed = 42, name = "Plot
     plt.title("PCs for %s" % name)
     plt.xlabel("Number of Principal Components")
     plt.ylabel("Cumulative Percent Variance Explained")
-    plt.show()    
+    plt.show()     
     
 
 #%%
@@ -196,6 +196,7 @@ def normalize(df, norm_cols, norm_type = "l2"):
 #    for col in dummy_cols:
 #        pd.get_dummies()
 #test = pd.get_dummies(data = data131_y["ABC"], prefix = "ABC", sparse = False, dtype = int)
+    
 
 #%%
 # function to convert numeric features to kbinsdiscretized features
